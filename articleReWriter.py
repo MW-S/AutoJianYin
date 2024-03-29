@@ -16,7 +16,7 @@ def sendContent2Rewriter(content):
     # 获取锁
     lock.acquire()
     try:
-        content = f"请在保证内容含义不变且字数不变的情况下帮我重写以下内容：" + content;
+        content = f"请在保证内容含义不变且字数不变的情况下使用中文帮我重写以下内容：" + content;
         driver = connectCurrentChrome();
         element = driver.find_element(By.XPATH, '//*[@id="prompt-textarea"]')
         element.clear()

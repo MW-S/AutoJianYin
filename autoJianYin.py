@@ -4,6 +4,10 @@ import time, os, sys
 
 import pyperclip
 
+from Utills import retry_function
+from autoUtill import clickComponent, getAppByTitle, setEditComponent, getRectangleByTitle,\
+    getComponentByTitle, waitOrWaitNotComponent, getComponentByTitleAndAutoID, getChildComponentByTitleAndAutoID, getApp
+
 sys.coinit_flags = 2  # COINIT_APARTMENTTHREADED
 
 from pathlib import Path
@@ -79,49 +83,53 @@ def autoGenerate(contentText = '123', title="测试"):
     # 定义应用程序的执行文件名和窗口标题
     executable = r'D:\JianyingPro\JianyingPro.exe'
     window_title = '剪映专业版'
-    # 尝试连接到已经打开的应用程序
-    try:
-        app = Application(backend='uia').connect(title=window_title, timeout=5)
-        print("应用程序已经打开并连接成功。")
-    except Exception as e:
-        print("无法连接到应用程序，可能是因为它没有打开或者窗口标题不正确。尝试启动应用程序...")
-        try:
-            # 启动应用程序
-            os.system(f"start {executable}");
-            time.sleep(5);
-            app = Application(backend='uia').connect(title=window_title, timeout=5)
-            print("应用程序已成功启动。")
-        except Exception as e:
-            print("无法启动应用程序。", e)
+    # # 尝试连接到已经打开的应用程序
+    # try:
+    #     app = Application(backend='uia').connect(title=window_title, timeout=5)
+    #     print("应用程序已经打开并连接成功。")
+    # except Exception as e:
+    #     print("无法连接到应用程序，可能是因为它没有打开或者窗口标题不正确。尝试启动应用程序...")
+    #     try:
+    #         # 启动应用程序
+    #         os.system(f"start {executable}");
+    #         time.sleep(5);
+    #         app = Application(backend='uia').connect(title=window_title, timeout=5)
+    #         print("应用程序已成功启动。")
+    #     except Exception as e:
+    #         print("无法启动应用程序。
+    app = getApp(window_title, executable);
     autoGenerate_First(app, window_title, contentText);
     autoGenerate_Two(app, window_title, title);
 
 # 主页面操作，点击关闭BGM音轨，并且点击导出打开文件夹
 def autoGenerate_Two(app, window_title, title):
     print("进入第二阶段生成")
-    app.window(title=window_title, auto_id="MainWindow").wait('visible', timeout=600, retry_interval=20)
-    jianyinMainWindows = app.window(title=window_title, auto_id="MainWindow");
+    jianyinMainWindows = getComponentByTitleAndAutoID(app, window_title, "MainWindow", 600, 20)
     print("剪辑窗口出现")
     # clickTaskJianYin();
     jianyinMainWindows.set_focus();
     # jianyinMainWindows.print_control_identifiers();
     print("等待BGM轨道静音按钮")
-    jianyinMainWindows['GroupBox13'].wait('visible', timeout=20, retry_interval=5)
+    waitOrWaitNotComponent(jianyinMainWindows, "GroupBox13", 0, 20, 5)
+    # jianyinMainWindows['GroupBox13'].wait('visible', timeout=20, retry_interval=5)
     # bottomPanel = jianyinMainWindows['GroupBox13']
     # BGM轨道静音
     basePos = jianyinMainWindows.rectangle();
     mouse.click(button='left', coords=(basePos.left + 97, basePos.bottom - 98))
     print("BGM轨道静音完成")
     # 点击导出
-    jianyinMainWindows['GroupBox4'].wait('visible', timeout=20, retry_interval=5)
-    exportBasePos =  (jianyinMainWindows['GroupBox4']).rectangle();
+    # jianyinMainWindows['GroupBox4'].wait('visible', timeout=20, retry_interval=5)
+    waitOrWaitNotComponent(jianyinMainWindows, "GroupBox4", 0, 20, 5)
+    # exportBasePos =  (jianyinMainWindows['GroupBox4']).rectangle();
+    exportBasePos = getRectangleByTitle(app, window_title, "GroupBox4", jianyinMainWindows);
     exportPos = [int((exportBasePos.left + exportBasePos.right) / 2), int((exportBasePos.top + exportBasePos.bottom)/2)]
     mouse.click(button='left', coords=(exportPos[0], exportPos[1]));
 
     print("右上角导出按钮点击完成")
-    jianyinMainWindows.child_window(title="导出", auto_id="ExportWindow_Container").wait('visible', timeout=20, retry_interval=5);
-    #点击取消视频导出(默认取消则不需要点击)
-    videoOutBase = jianyinMainWindows.child_window(title="导出", auto_id="ExportWindow_Container");
+    # jianyinMainWindows.child_window(title="导出", auto_id="ExportWindow_Container").wait('visible', timeout=20, retry_interval=5);
+    # #点击取消视频导出(默认取消则不需要点击)
+    # videoOutBase = jianyinMainWindows.child_window(title="导出", auto_id="ExportWindow_Container");
+    videoOutBase = getChildComponentByTitleAndAutoID(jianyinMainWindows, "导出", "ExportWindow_Container");
     # videoOutBase.print_control_identifiers();
     # videoOutBase["GroupBox"]["Static"]
     time.sleep(1);
@@ -139,7 +147,8 @@ def autoGenerate_Two(app, window_title, title):
     #打开文件夹
     time.sleep(5);
     # print(cancelVideoOutBasePos);
-    videoOutBase = jianyinMainWindows.child_window(title="导出", auto_id="ExportWindow_Container");
+    # videoOutBase = jianyinMainWindows.child_window(title="导出", auto_id="ExportWindow_Container");
+    videoOutBase = getChildComponentByTitleAndAutoID(jianyinMainWindows, "导出", "ExportWindow_Container");
     cancelVideoOutBasePos = videoOutBase.rectangle();
     # print(cancelVideoOutBasePos);
     # offsets = calculateOffSet(cancelVideoOutBasePos, 1147, 644)
@@ -150,54 +159,58 @@ def autoGenerate_Two(app, window_title, title):
     print("打开文件夹完成")
 
 #自动打开剪映点击图文成片功能进行生成视频
+
 def autoGenerate_First(app, window_title, contentText):
+    # app.window(title=window_title).wait('visible', timeout=60, retry_interval=5)
+    # jianyinPcWindows = app.window(title=window_title, auto_id="HomeWindow");
+    # jianyinPcWindows.set_focus();
+    # jianyinPcWindows['Static13'].wait('visible', timeout=20, retry_interval=5)
+    # jianyinPcWindows['Static13'].click_input();
+    clickComponent(app, window_title, "Static13")
+    app2WindowsTitle = "图文成片"
+    componentTitle = "图文成片";
+    app2 = getAppByTitle(app2WindowsTitle);
+    pic2Video = getComponentByTitle(app2, componentTitle);
+    # # pic2Video.print_control_identifiers()
+    # pic2Video['Static4'].click_input();
+    clickComponent(app2, componentTitle, "Static4", pic2Video)
 
-    # app = Application(backend='uia').connect(title=window_title, timeout=5)
-    # app = Application(backend='uia').connect(title = "剪映专业版")
-    # app.window(title=u"剪映专业版", class_name="HomePage_QMLTYPE_102").wait('visible', timeout=60, retry_interval=5)
-    app.window(title=window_title).wait('visible', timeout=60, retry_interval=5)
-    # jianyinPcWindows = app.window(title=u"剪映专业版", class_name="HomePage_QMLTYPE_102");
-    jianyinPcWindows = app.window(title=window_title, auto_id="HomeWindow");
-    jianyinPcWindows.set_focus();
-    jianyinPcWindows['Static13'].wait('visible', timeout=20, retry_interval=5)
-    jianyinPcWindows['Static13'].click_input();
+    setEditComponent(app2, componentTitle, "Edit", contentText, pic2Video)
+    # pic2Video['Edit'].wait('visible', timeout=10, retry_interval=1)
+    # #time.sleep(0.5)
+    # textEdit =  pic2Video['Edit'];
+    # textEdit.set_edit_text("");
+    # textEdit.set_edit_text(contentText);
 
-    time.sleep(0.5);
-    app2 = Application(backend='uia').connect(title="图文成片");
-    # app2.window(title=u"图文成片",class_name="CategoryArticleVideoView_QMLTYPE_483").wait('visible', timeout=30, retry_interval=5)
-    # pic2Video = app2.window(title=u"图文成片", class_name="CategoryArticleVideoView_QMLTYPE_483");
-    app2.window(title=u"图文成片").wait('visible', timeout=30, retry_interval=5)
-    pic2Video = app2.window(title=u"图文成片");
-    # pic2Video.print_control_identifiers()
-    pic2Video['Static4'].click_input();
-    pic2Video['Edit'].wait('visible', timeout=10, retry_interval=1)
-    #time.sleep(0.5)
-    textEdit =  pic2Video['Edit'];
-    textEdit.set_edit_text("");
-    textEdit.set_edit_text(contentText);
     # 暂时无法选择配音员
-    pic2Video['GroupBox7'].click_input();
+    clickComponent(app2, componentTitle, "GroupBox7", pic2Video)
+    # pic2Video['GroupBox7'].click_input();
     # pic2Video['JianyingPro'].print_control_identifiers();
-    pic2Video['JianyingPro'].wait('visible', timeout=10, retry_interval=1)
-    pos = (pic2Video['JianyingPro']).rectangle();
+
+    # pic2Video['JianyingPro'].wait('visible', timeout=10, retry_interval=1)
+    # pos = (pic2Video['JianyingPro']).rectangle();
+    pos = getRectangleByTitle(app2, componentTitle, "JianyingPro", pic2Video);
     # 选择最近使用的第一个配音员
     mouse.click(button='left', coords=(pos.left + 129, pos.top + 93))
     # 选择最近使用的第二个配音员
     # mouse.click(button='left', coords=(pos.left + 129, pos.top + 121))
-    pic2Video['JianyingPro'].wait_not('visible', timeout=10, retry_interval=1)
-
+    # pic2Video['JianyingPro'].wait_not('visible', timeout=10, retry_interval=1)
+    waitOrWaitNotComponent(pic2Video, "JianyingPro", 1);
     # 点击生成视频
-    nearPos = (pic2Video['GroupBox7']).rectangle();
+    # nearPos = (pic2Video['GroupBox7']).rectangle();
+    nearPos = getRectangleByTitle(app2, componentTitle, "GroupBox7", pic2Video);
     mouse.click(button='left', coords=(nearPos.right + 50, nearPos.bottom - 15))  # 点击生成视频
-    pic2Video['JianyingPro'].wait('visible', timeout=10, retry_interval=1)
+    # pic2Video['JianyingPro'].wait('visible', timeout=10, retry_interval=1)
+    waitOrWaitNotComponent(pic2Video, "JianyingPro");
     mouse.click(button='left', coords=(nearPos.right, nearPos.bottom - 155))  # 点击智能匹配素材
 
+
 # Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    # clickTaskJianYin("D:\\JianyingPro\\5.2.0.11062\\JianyingPro.exe");
-    # autoGenerate();
-    # readWordRun(r"J:\storyFile\学姐别怕，我来保护你\改写版本\改_学姐别怕，我来保护你_1-3.docx")
-    autoGenerate()
+# if __name__ == '__main__':
+#     # clickTaskJianYin("D:\\JianyingPro\\5.2.0.11062\\JianyingPro.exe");
+#     # autoGenerate();
+#     readWordRun(r"J:\storyFile\学姐别怕，我来保护你\改写版本\改_学姐别怕，我来保护你_4-6.docx")
+    # autoGenerate()
 
 
 

@@ -94,6 +94,6 @@ def chatgptReWriter(filePath = r"J:\storyFile\我养大的妹妹们，只想把�
     contentFormat(os.path.join(end_file_path, file_name));
     os.start(f'explorer "{end_file_path}"')
 
-# if __name__ == "__main__":
-#     # chatgptReWriter(filePath="J:\\storyFile\\我养大的妹妹们，只想把我送监狱\\我养大的妹妹们，只想把我送监狱_1-3.docx");
+if __name__ == "__main__":
+    chatgptReWriter(filePath=r"J:\storyFile\学姐别怕，我来保护你\学姐别怕，我来保护你_4-6.docx");
 #    startInput(chatgptReWriter);
